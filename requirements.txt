@@ -4,7 +4,6 @@ sqlalchemy
 passlib
 bcrypt
 python-multipart
-pymysql
 pydantic[email]
 psycopg2-binary
 alembic
