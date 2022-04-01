@@ -1,0 +1,18 @@
+python-jose
+
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root'; 
+SET PASSWORD FOR 'root'@'localhost' = PASSWORD('root');
+set password for 'root'@'localhost' = password('root');
+SET PASSWORD FOR root = 'root';
+UPDATE mysql.user SET Password=PASSWORD('root') WHERE User='root';
+update user set authentication_string=password(root) where user='root';
+update mysql.user set authentication_string='root' where user='root';
+update mysql.user set authentication_string='password' where user='root';
+apt-get remove --purge mysql-server mysql-common
+
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'root';
+
+
+set password for 'root'@'localhost'=password('root');
+
+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
