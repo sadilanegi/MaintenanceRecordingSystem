@@ -1,41 +1,9 @@
-from typing import List, Optional
-from pydantic import BaseModel
-from fastapi import  FastAPI,Depends,status,Response,HTTPException, Form, UploadFile
-from fastapi.responses import HTMLResponse
-from . import schemas   # or from . import schemas,models together
+from fastapi import  FastAPI
+
+from maintenance.routers import authentiation
 from . import models
-from sqlalchemy.orm import Session
-from datetime import datetime,timezone
-from enum import Enum
-from .database import SessionLocal, engine
-from passlib.context import CryptContext
-import random
-# import asyncio
-
-# import blog
-
-class Month(str, Enum):
-    Jan = "January"
-    Feb = "February"
-    Mar = "March"
-    April = "April"
-    May = "May"
-    June = "June"
-    July = "March"
-    Aug = "March"
-    Sept="September"
-    Oct="October"
-    Nov="November"
-    Dec="December"
-
-
-def uniqueid():
-    seed = random.getrandbits(32)
-    while True:
-       yield seed
-       seed += 1
-
-unique_sequence = uniqueid()
+from .database import engine
+from .routers import maintenance,user,authentiation
 
 description = """
 Maintenance Recording App helps you manage your maintenance in one place. 🚀
@@ -60,20 +28,20 @@ app=FastAPI(
     description=description
 )
 
-# start = datetime
-
 models.Base.metadata.create_all(engine)
+app.include_router(authentiation.router)
+app.include_router(user.router)
+app.include_router(maintenance.router)
 
-
-def get_db():
-    db=SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+# def get_db():
+#     db=SessionLocal()
+#     try:
+#         yield db
+#     finally:
+#         db.close()
     
 
-regex = '^[a-z0-9]+[\._]?[ a-z0-9]+[@]\w+[. ]\w{2,3}$'
+
 ##########################################################################################################
 # @app.post('/blog',status_code=status.HTTP_201_CREATED)
 # def create(request:schemas.Blog,db:Session = Depends(get_db)):
@@ -120,79 +88,103 @@ regex = '^[a-z0-9]+[\._]?[ a-z0-9]+[@]\w+[. ]\w{2,3}$'
 #         # return{'detail':f"Blog with id {id} is not available"}
 #     return blog
 ######################################################################################################
-pwd_cxt = CryptContext(schemes=["bcrypt"],deprecated="auto")
-##############################################!!!!Super User!!!!!########################################################
+# pwd_cxt = CryptContext(schemes=["bcrypt"],deprecated="auto")
+# ##############################################!!!!Super User!!!!!########################################################
 
-#Create Super User
-@app.post('/user/super',tags=['Users'])
-def create_superuser(request:schemas.User,db:Session = Depends(get_db)): #,is_admin:Optional[bool]=True
-    hashedPassword = pwd_cxt.hash(request.password)
-    new_user = models.User(is_suadmin=True,name=request.name,roomno=request.roomno,email = request.email,password=hashedPassword)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+# #Create Super User
+# @app.post('/user/super',tags=['Users'])
+# def create_superuser(request:schemas.User,db:Session = Depends(get_db)): #,is_admin:Optional[bool]=True
+#     hashedPassword = pwd_cxt.hash(request.password)
+#     new_user = models.User(is_suadmin=True,name=request.name,roomno=request.roomno,email = request.email,password=hashedPassword)
+#     db.add(new_user)
+#     db.commit()
+#     db.refresh(new_user)
+#     return new_user
 
-#Show Super Users
-@app.get('/user/super',response_model=List[schemas.SuperUser],tags=['Users'])
-def show_super(db:Session = Depends(get_db)):
-    user=db.query(models.User).filter(models.User.is_admin == True).all()
-    return user
+# #Show Super Users
+# @app.get('/user/super',response_model=List[schemas.SuperUser],tags=['Users'])
+# def show_super(db:Session = Depends(get_db)):
+#     user=db.query(models.User).filter(models.User.is_admin == True).all()
+#     return user
 
 
-##############################################!!!Admin User!!!##################################################
-@app.post('/user/admin',tags=['Users'])
-def create_adminuser(request:schemas.User,db:Session = Depends(get_db)): #,is_admin:Optional[bool]=True
-    hashedPassword = pwd_cxt.hash(request.password)
-    new_user = models.User(is_admin=True,name=request.name,roomno=request.roomno,email = request.email,password=hashedPassword)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+# ##############################################!!!Admin User!!!##################################################
+# @app.post('/user/admin',tags=['Users'])
+# def create_adminuser(request:schemas.User,db:Session = Depends(get_db)): #,is_admin:Optional[bool]=True
+#     hashedPassword = pwd_cxt.hash(request.password)
+#     new_user = models.User(is_admin=True,name=request.name,roomno=request.roomno,email = request.email,password=hashedPassword)
+#     db.add(new_user)
+#     db.commit()
+#     db.refresh(new_user)
+#     return new_user
 
-@app.get('/user/admin',response_model=List[schemas.AdminUser],tags=['Users'])
-def show_admin(db:Session = Depends(get_db)):
-    user=db.query(models.User).filter(models.User.is_admin == True).all()
-    return user
+# @app.get('/user/admin',response_model=List[schemas.AdminUser],tags=['Users'])
+# def show_admin(db:Session = Depends(get_db)):
+#     user=db.query(models.User).filter(models.User.is_admin == True).all()
+#     return user
 
-##################################################!!!!!!Users!!!!!##############################################
-@app.post('/user',tags=['Users'])
-def create_user(request:schemas.User,db:Session = Depends(get_db)):
-    hashedPassword = pwd_cxt.hash(request.password)
-    new_user = models.User(name=request.name,roomno=request.roomno,email = request.email,password=hashedPassword)
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return new_user
+# ##################################################!!!!!!Users!!!!!##############################################
+# @app.post('/user',tags=['Users'])
+# def create_user(request:schemas.User,db:Session = Depends(get_db)):
+#     hashedPassword = pwd_cxt.hash(request.password)
+#     new_user = models.User(name=request.name,roomno=request.roomno,email = request.email,password=hashedPassword)
+#     db.add(new_user)
+#     db.commit()
+#     db.refresh(new_user)
+#     return new_user
 
-# getuser detail by name 
-@app.get('/user/{id}',response_model=schemas.ShowUser,tags=['Users'])
-def get_user(id:int,db:Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == id).first()
-    return user
+# # getuser detail by name 
+# @app.get('/user/{id}',response_model=schemas.ShowUser,tags=['Users'])
+# def get_user(id:int,db:Session = Depends(get_db)):
+#     user = db.query(models.User).filter(models.User.id == id).first()
+#     return user
 
-@app.get('/user',response_model=List[schemas.ShowUser],tags=['Users'])
-def all_user(db:Session = Depends(get_db)):
-    user=db.query(models.User).filter(models.User.is_admin,models.User.is_admin == False).all()
-    return user
+# @app.get('/user',response_model=List[schemas.ShowUser],tags=['Users'])
+# def all_user(db:Session = Depends(get_db)): 
+#     user=db.query(models.User).filter(models.User.is_admin == False,models.User.is_admin == False).all()
+#     return user
 #########################################!!!!!!Maintenance!!!!!##################################################
 #tags: List[str] = []
 
-@app.post('/maintenance/{months}',tags=['maintenance'])
-def pay_maintenance(months: Month,request:schemas.Maintenance,db:Session = Depends(get_db)):
-    monthexist=db.query(models.Maintenance).filter(models.Maintenance.month == months,models.Maintenance.user_id == 1).all()
-    if(not monthexist):
-        new_user = models.Maintenance(user_id=2,amount=500,transaction_id=next(unique_sequence),month=months)
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-    else:
-        new_user=f"Month {months} Maintenance have been paid"
+# @app.post('/maintenance/{months}',tags=['Maintenance'])
+# def pay_maintenance(months: Month,db:Session = Depends(get_db)):
+#     monthexist=db.query(models.Maintenance).filter(models.Maintenance.month == months,models.Maintenance.user_id == 1).all()
+#     if(not monthexist):
+#         new_user = models.Maintenance(user_id=1,amount=500,transaction_id=next(unique_sequence),month=months)
+#         db.add(new_user)
+#         db.commit()
+#         db.refresh(new_user)
+#     else:
+#         new_user=f"Month {months} Maintenance have been paid"
 
-    return new_user
+#     return new_user
 
-@app.get('/user/{user_id}',response_model=List[schemas.ShowMaintenanceDetail],tags=['Maintenance'])
-def get_maintenance(user_id:int,db:Session = Depends(get_db)):
-    user = db.query(models.Maintenance).filter(models.Maintenance.user_id == user_id).all()
-    return user
+
+# get maintenance by userid
+# @app.get('/maintenance/{user_id}',response_model=List[schemas.ShowMaintenanceDetail],tags=['Maintenance'])
+# def get_maintenance(user_id:int,db:Session = Depends(get_db)):
+#     #return db
+#     user1 = db.query(models.Maintenance).filter(models.Maintenance.user_id == user_id).order_by(models.Maintenance.month).all()
+    
+#     return user1
+    
+
+# .filter(models.Maintenance.user_id == user_id
+# user=db.query(models.User).filter(models.User.is_admin,models.User.is_admin == False).all()
+
+
+# #get maintenance by month
+# @app.get('/maintenance/{months}',response_model=List[schemas.ShowMaintenanceDetail],tags=['Maintenance'])
+# def get_maintenance_by_month(months: Month,db:Session = Depends(get_db)):
+#     #return db
+#     user2 = db.query(models.Maintenance).filter(models.Maintenance.month == months).all()
+#     return user2    
+
+# get all maintenance(Order by user id remaining)
+# @app.get('/maintenance/',response_model=List[schemas.ShowMaintenanceDetail],tags=['Maintenance'])
+# def get_all_maintenance(db:Session = Depends(get_db)):
+#     #return db
+#     user1 = db.query(models.Maintenance).all()
+    
+#     return user1
     
